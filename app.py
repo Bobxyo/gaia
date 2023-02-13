@@ -1,25 +1,42 @@
 import os
 import streamlit as st
-import requests
+import openai
 
-KEY = os.getenv("KEY")
+# Hide API Key
+API_KEY = os.getenv("KEY")
+openai.api_key = API_KEY
 
-def get_response(prompt):
-    response = requests.post("https://api.openai.com/v1/engines/text-davinci-002/completions",
-                             headers={"Content-Type": "application/json", "Authorization": f"Bearer {KEY}"},
-                             json={"prompt": prompt, "max_tokens": 1024, "n": 1, "stop": None, "temperature": 0.5}).json()
+# Set up chat history
+history = []
 
-    return response["choices"][0]["text"]
+def chat(model, prompt):
+    completions = openai.Completion.create(
+        engine=model,
+        prompt=prompt,
+        max_tokens=1024,
+        n=1,
+        stop=None,
+        temperature=0.5,
+    )
 
-st.title("Chat with OpenAI")
+    message = completions.choices[0].text
+    history.append(f"Me: {prompt}")
+    history.append(f"ChatGPT: {message}")
+    return message
 
-conversation = []
+# Create the Streamlit app
+st.set_page_config(page_title="ChatGPT", page_icon=":robot:", layout="wide")
+st.title("ChatGPT")
 
-input_text = st.text_input("Ask me anything!")
+model = "text-davinci-003"
+prompt = st.text_input("Enter your message:")
 
-if input_text:
-    response = get_response(input_text)
-    conversation.append(f"You: {input_text}")
-    conversation.append(f"OpenAI: {response}")
+if st.button("Submit"):
+    response = chat(model, prompt)
+    st.write("ChatGPT: ", response)
 
-st.text("\n".join(conversation))
+# Show chat history
+if len(history) > 0:
+    st.header("Chat History:")
+    for h in history:
+        st.write(h)
