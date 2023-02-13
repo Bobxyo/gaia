@@ -1,29 +1,38 @@
-import streamlit as st
 import openai
-import os
+import streamlit as st
 
-# 隐藏 API Key
-openai.api_key = os.getenv("OPENAI_API_KEY")
+KEY = "" # Add your OpenAI API key here
 
-# 设置标题
-st.title("OpenAI 文章生成器")
+# Authenticate to OpenAI API
+openai.api_key = KEY
 
-# 获取用户输入
-prompt = st.text_input("请输入提示")
-min_length = st.number_input("最小文章字数", min_value=1, max_value=1000, value=100)
-
-# 如果有输入，则调用 OpenAI API 生成文章
-if prompt:
-    response = openai.Completion.create(
-        engine="text-davinci-003",
+# Create a function to generate answers using the ChatGPT model
+def generate_answer(model, prompt):
+    completions = openai.Completion.create(
+        engine=model,
         prompt=prompt,
-        max_tokens=3000,
+        max_tokens=1024,
         n=1,
         stop=None,
         temperature=0.5,
     )
-    article = response["choices"][0]["text"].strip()
-    if len(article) >= min_length:
-        st.write("文章：", article)
-    else:
-        st.write("很抱歉，文章长度过短。")
+
+    message = completions.choices[0].text
+    return message
+
+# Define the main Streamlit app
+def main():
+    st.title("ChatGPT")
+    model = "text-davinci-003"
+    history = []
+    prompt = st.text_input("Ask a Question:")
+
+    if prompt:
+        history.append(("User", prompt))
+        answer = generate_answer(model, prompt)
+        history.append(("ChatGPT", answer))
+        st.write("Answer: ", answer)
+        st.write("History:", history)
+
+if __name__ == "__main__":
+    main()
