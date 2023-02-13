@@ -1,38 +1,25 @@
-import openai
+import os
 import streamlit as st
+import requests
 
-KEY = "" # Add your OpenAI API key here
+KEY = os.getenv("OPENAI_KEY")
 
-# Authenticate to OpenAI API
-openai.api_key = KEY
+def get_response(prompt):
+    response = requests.post("https://api.openai.com/v1/engines/text-davinci-002/completions",
+                             headers={"Content-Type": "application/json", "Authorization": f"Bearer {KEY}"},
+                             json={"prompt": prompt, "max_tokens": 1024, "n": 1, "stop": None, "temperature": 0.5}).json()
 
-# Create a function to generate answers using the ChatGPT model
-def generate_answer(model, prompt):
-    completions = openai.Completion.create(
-        engine=model,
-        prompt=prompt,
-        max_tokens=1024,
-        n=1,
-        stop=None,
-        temperature=0.5,
-    )
+    return response["choices"][0]["text"]
 
-    message = completions.choices[0].text
-    return message
+st.title("Chat with OpenAI")
 
-# Define the main Streamlit app
-def main():
-    st.title("ChatGPT")
-    model = "text-davinci-003"
-    history = []
-    prompt = st.text_input("Ask a Question:")
+conversation = []
 
-    if prompt:
-        history.append(("User", prompt))
-        answer = generate_answer(model, prompt)
-        history.append(("ChatGPT", answer))
-        st.write("Answer: ", answer)
-        st.write("History:", history)
+input_text = st.text_input("Ask me anything!")
 
-if __name__ == "__main__":
-    main()
+if input_text:
+    response = get_response(input_text)
+    conversation.append(f"You: {input_text}")
+    conversation.append(f"OpenAI: {response}")
+
+st.text("\n".join(conversation))
