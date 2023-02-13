@@ -2,7 +2,7 @@ import os
 import streamlit as st
 import requests
 
-KEY = os.getenv("OPENAI_KEY")
+KEY = os.getenv("KEY")
 
 def get_response(prompt):
     response = requests.post("https://api.openai.com/v1/engines/text-davinci-002/completions",
